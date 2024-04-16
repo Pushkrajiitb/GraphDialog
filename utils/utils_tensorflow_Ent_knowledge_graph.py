@@ -17,7 +17,7 @@ def read_langs(file_name, max_line=None):
     max_resp_len = 0
     total_node_cnt, total_dep_cnt = 0, 0
 
-    with open('data/KVR/kvret_entities.json') as f:
+    with open('/content/GraphDialog/data/KVR/kvret_entities.json') as f:
         global_entity = json.load(f)
 
     with open(file_name) as fin:
@@ -375,9 +375,9 @@ def text_to_sequence(pairs, lang):
 
 
 def prepare_data_seq(task, batch_size=100):
-    file_train = 'data/KVR/train_graph.txt'
-    file_dev = 'data/KVR/dev_graph.txt'
-    file_test = 'data/KVR/test_graph.txt'
+    file_train = '/content/GraphDialog/data/KVR/train_graph.txt'
+    file_dev = '/content/GraphDialog/data/KVR/dev_graph.txt'
+    file_test = '/content/GraphDialog/data/KVR/test_graph.txt'
     pair_train, train_max_len = read_langs(file_train, max_line=None)
     pair_dev, dev_max_len = read_langs(file_dev, max_line=None)
     pair_test, test_max_len = read_langs(file_test, max_line=None)

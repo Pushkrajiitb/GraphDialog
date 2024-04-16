@@ -69,7 +69,7 @@ class RNN(tf.keras.Model):
         def step(inputs, states, edge_types, cell_mask, training):
             # pdb.set_trace()
             output, new_states = self.cell(inputs, states, edge_types, cell_mask, training)  # inputs: batch_size*embedding_dim, states: 4*batch_size*embedding_dim
-            if not nest.is_sequence(new_states):
+            if not (nest.is_sequence_or_composite(new_states) and not nest.is_sequence_or_composite(new_states,composite_only=True)):
                 new_states = [new_states]
             return output, new_states
 
@@ -104,8 +104,8 @@ class RNN(tf.keras.Model):
                 cell_mask = math_ops.cast(cell_mask, dtypes_module.bool)
 
         def _expand_mask(mask_t, input_t, fixed_dim=1):  # mask_t: batch_size*1, input_t: batch_size*embedding_dim
-            assert not nest.is_sequence(mask_t)
-            assert not nest.is_sequence(input_t)
+            assert not (nest.is_sequence_or_composite(mask_t) and not nest.is_sequence_or_composite(mask_t,composite_only=True))
+            assert not (nest.is_sequence_or_composite(input_t) and not nest.is_sequence_or_composite(input_t,composite_only=True))
             rank_diff = len(input_t.shape) - len(mask_t.shape)  # rand_diff: 0
             for _ in range(rank_diff):
                 mask_t = array_ops.expand_dims(mask_t, -1)
@@ -120,12 +120,12 @@ class RNN(tf.keras.Model):
             successive_outputs = []
 
             def _process_single_input_t(input_t):
-                input_t = array_ops.unstack(input_t)
+                input_t = tf.unstack(input_t)
                 if self.go_backwards:
                     input_t.reverse()
                 return input_t
 
-            if nest.is_sequence(inputs):  # inputs: max_len*batch_size*embedding_dim
+            if nest.is_sequence_or_composite(inputs) and not nest.is_sequence_or_composite(inputs,composite_only=True):  # inputs: max_len*batch_size*embedding_dim
                 processed_input = nest.map_structure(_process_single_input_t, inputs)
             else:
                 processed_input = (_process_single_input_t(inputs),)
@@ -135,7 +135,7 @@ class RNN(tf.keras.Model):
                 return nest.pack_sequence_as(inputs, inp)
 
             if mask is not None:
-                mask_list = array_ops.unstack(mask)  # mask: max_len*batch_size*1
+                mask_list = tf.unstack(mask)  # mask: max_len*batch_size*1
                 if self.go_backwards:
                     mask = tf.reverse(mask, [0])
                     mask_list.reverse()

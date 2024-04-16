@@ -105,7 +105,7 @@ class GraphCell(tf.keras.Model):
         if state_size > self.recurrent_size:
             raise ValueError("length of states exceeds recurrent_size.")
         if self.use_bias:
-            unstacked_biases = array_ops.unstack(self.bias)  # unstacked_biases: (recurrent_size+1)*embedding_dim
+            unstacked_biases = tf.unstack(self.bias)  # unstacked_biases: (recurrent_size+1)*embedding_dim
             input_bias, recurrent_bias = unstacked_biases[0], unstacked_biases[1:]  # input_bias: (3*embedding_dim), recurrent_bias: recurrent_size*(3*embedding_dim)
 
         matrix_x = K.dot(inputs, self.kernel)  # matrix_x: batch_size*(3*embedding_dim)
@@ -117,8 +117,8 @@ class GraphCell(tf.keras.Model):
         x_h = matrix_x[:, 2 * self.units:]  # x_h: batch_size*embedding_dim
 
         def _expand_mask(mask_t, input_t, fixed_dim=1):  # mask_t: batch_size*1, input_t: batch_size*embedding_dim
-            assert not nest.is_sequence(mask_t)
-            assert not nest.is_sequence(input_t)
+            assert not (nest.is_sequence_or_composite(mask_t) and not nest.is_sequence_or_composite(mask_t,composite_only=True))
+            assert not (nest.is_sequence_or_composite(input_t) and not nest.is_sequence_or_composite(input_t,composite_only=True))
             rank_diff = len(input_t.shape) - len(mask_t.shape)  # rand_diff: 0
             for _ in range(rank_diff):
                 mask_t = array_ops.expand_dims(mask_t, -1)
